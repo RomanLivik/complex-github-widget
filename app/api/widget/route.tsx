@@ -3,6 +3,13 @@ import { GraphQLClient, gql } from 'graphql-request';
 
 const endpoint = 'https://api.github.com/graphql';
 
+interface ChartPoint {
+  x: number;
+  y: number;
+  val: number;
+  day: string;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const username = searchParams.get('user');
@@ -70,14 +77,14 @@ export async function GET(request: Request) {
     const chartHeight = 200;
     const stepX = chartWidth / (allDays.length - 1);
 
-    const points = allDays.map((d: any, i: number) => ({
+    const points: ChartPoint[] = allDays.map((d: any, i: number) => ({
       x: i * stepX,
       y: chartHeight - (d.contributionCount / maxVal) * chartHeight,
       val: d.contributionCount,
-      day: d.date.split('-')[2] 
+      day: d.date.split('-')[2]
     }));
 
-    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    const linePath = points.map((p: ChartPoint, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
     const areaPath = `${linePath} L ${points[points.length-1].x} ${chartHeight} L 0 ${chartHeight} Z`;
 
     const processedRepos = user.pinnedItems.nodes.map((repo: any) => {
@@ -98,8 +105,6 @@ export async function GET(request: Request) {
         }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '80px' }}>
-            
-            {/* LARGE DONUT */}
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <svg width="300" height="300" viewBox="0 0 42 42">
                   <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#111" strokeWidth="10"></circle>
@@ -116,7 +121,7 @@ export async function GET(request: Request) {
                   }, { elements: [], offset: 0 }).elements}
                 </svg>
                 <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '40px', gap: '15px' }}>
-                  {sortedLangs.map((l, i) => (
+                  {sortedLangs.map((l: any, i: number) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
                       <div style={{ display: 'flex', width: '20px', height: '20px', backgroundColor: l.color, marginRight: '15px' }} />
                       <div style={{ display: 'flex', fontSize: '24px', fontWeight: 'bold', color: '#FFFFFF' }}>{l.name}</div>
@@ -125,28 +130,24 @@ export async function GET(request: Request) {
                 </div>
             </div>
 
-            {/* EXTENDED GRAPH WITH EVERY DAY LABELED */}
             <div style={{ display: 'flex', flexDirection: 'column', width: '750px' }}>
                 <div style={{ display: 'flex', fontSize: '14px', color: '#FFFFFF', marginBottom: '20px', letterSpacing: '2px', fontWeight: 'bold' }}>
                    MONTHLY_ACTIVITY_PULSE // 30_DAY_STREAMS
                 </div>
                 
                 <div style={{ display: 'flex', position: 'relative', width: '700px', height: '200px', borderLeft: '2px solid #555', borderBottom: '2px solid #555', marginLeft: '50px' }}>
-                    
-                    {/* Y-AXIS (EVERY SECTION LABELED) */}
-                    {[1, 0.75, 0.5, 0.25, 0].map((factor, i) => (
+                    {[1, 0.75, 0.5, 0.25, 0].map((factor: number, i: number) => (
                         <div key={i} style={{ 
                             display: 'flex', position: 'absolute', left: '-45px', 
                             top: `${(1 - factor) * 100}%`, transform: 'translateY(-50%)',
-                            fontSize: '11px', color: factor === 1 ? '#FFF' : '#777', fontWeight: factor === 1 ? 'bold' : 'normal'
+                            fontSize: '11px', color: factor === 1 ? '#FFF' : '#777'
                         }}>
                             {Math.round(maxVal * factor)}
                         </div>
                     ))}
 
-                    {/* GRID */}
                     <div style={{ display: 'flex', position: 'absolute', width: '100%', height: '100%', flexDirection: 'column', justifyContent: 'space-between' }}>
-                        {[0, 1, 2, 3, 4].map(i => (
+                        {[0, 1, 2, 3, 4].map((i: number) => (
                           <div key={i} style={{ display: 'flex', width: '100%', height: '1px', borderTop: '1px dashed #222' }} />
                         ))}
                     </div>
@@ -154,13 +155,12 @@ export async function GET(request: Request) {
                     <svg width="700" height="200" style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}>
                         <path d={areaPath} fill="rgba(255, 255, 255, 0.03)" />
                         <path d={linePath} fill="none" stroke="#ffffff" strokeWidth="3" />
-                        {points.map((p, i) => (
+                        {points.map((p: ChartPoint, i: number) => (
                             <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#444" stroke="#fff" strokeWidth="1" />
                         ))}
                     </svg>
 
-                    {/* X-AXIS (EVERY DAY LABELED) */}
-                    {points.map((p, i) => (
+                    {points.map((p: ChartPoint, i: number) => (
                         <div key={i} style={{ 
                             display: 'flex', position: 'absolute', left: `${p.x}px`, bottom: '-25px',
                             transform: 'translateX(-50%)', fontSize: '9px', color: '#888'
@@ -172,7 +172,6 @@ export async function GET(request: Request) {
             </div>
           </div>
 
-          {/* REPOSITORIES */}
           <div style={{ display: 'flex', gap: '30px', width: '100%' }}>
             {processedRepos.map((repo: any, i: number) => (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', flex: 1, border: '1px solid #444', backgroundColor: '#050505' }}>
