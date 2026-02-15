@@ -45,7 +45,6 @@ export async function GET(request: Request) {
     const data: any = await client.request(query, { login: username });
     const user = data.user;
 
-    // --- ЛОГИКА ЯЗЫКОВ ---
     const langMap: any = {};
     user.repositories.nodes.forEach((repo: any) => {
       repo.languages.edges.forEach((edge: any) => {
@@ -60,14 +59,12 @@ export async function GET(request: Request) {
       .sort((a, b) => b.size - a.size).slice(0, 5);
     const totalSize = sortedLangs.reduce((acc, curr) => acc + curr.size, 0);
 
-    // --- ЛОГИКА ГРАФИКА АКТИВНОСТИ ---
     const lastWeeks = user.contributionsCollection.contributionCalendar.weeks.slice(-30);
     const activityPoints = lastWeeks.map((w: any) => 
         w.contributionDays.reduce((acc: any, d: any) => acc + d.contributionCount, 0)
     );
     const maxActivity = Math.max(...activityPoints) || 1;
 
-    // --- ОБРАБОТКА README ---
     const processedRepos = user.pinnedItems.nodes.map((repo: any) => {
       const readmeText = repo.readme?.text || "";
       const imgMatch = readmeText.match(/!\[.*?\]\((.*?)\)/) || readmeText.match(/<img.*?src=["'](.*?)["']/);
